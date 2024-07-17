@@ -7,6 +7,8 @@ using TaleWorlds.Core.ViewModelCollection.Generic;
 using TaleWorlds.Core;
 using TaleWorlds.Localization;
 using TaleWorlds.Library;
+using TaleWorlds.CampaignSystem.Party;
+using System.Linq;
 
 namespace TroopTiersPlus
 {
@@ -19,8 +21,10 @@ namespace TroopTiersPlus
             {
                 __result = 0;
             }
-            __result = MathF.Min(MathF.Max(MathF.Ceiling(((float)character.Level - 5f) / 5f), 0), 20);
-
+            else
+            {
+                __result = MathF.Min(MathF.Max(MathF.Ceiling(((float)character.Level - 5f) / 5f), 0), 20);
+            }
             return false;
         }
     }
@@ -198,6 +202,54 @@ namespace TroopTiersPlus
             __result = num;
 
             return false;
+        }
+    }
+
+    [HarmonyPatch(typeof(DefaultPartyTroopUpgradeModel), "GetXpCostForUpgrade")]
+    internal class GetXpForUpgradePatch
+    {
+        static bool Prefix(ref int __result, PartyBase party, CharacterObject characterObject, CharacterObject upgradeTarget)
+        {
+            if (upgradeTarget != null && characterObject.UpgradeTargets.Contains(upgradeTarget))
+            {
+                int tier = upgradeTarget.Tier;
+                int num = 0;
+                for (int i = characterObject.Tier + 1; i <= tier; i++)
+                {
+                    if (i <= 1)
+                    {
+                        num += 100;
+                    }
+                    else if (i == 2)
+                    {
+                        num += 300;
+                    }
+                    else if (i == 3)
+                    {
+                        num += 550;
+                    }
+                    else if (i == 4)
+                    {
+                        num += 900;
+                    }
+                    else if (i == 5)
+                    {
+                        num += 1300;
+                    }
+                    else
+                    {
+                        num += 1700;
+                    }
+                }
+                __result = num;
+            }
+            else
+            {
+                __result = 100000000;
+            }
+
+            return false;
+            
         }
     }
 }
